@@ -1,2 +1,10 @@
-# meeting-live-translation
-Live translation for your meetings using HTML5 Speech Recognition API
+# Live Translation
+
+Description
+
+### Install
+
+    npm install
+    node server.js
+
+### Commands

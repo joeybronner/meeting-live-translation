@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Meeting Live Translator</title>
+<script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
+<link rel="icon" type="image/png" href="img/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="css/styles.css">
+<html>
+    <body>
+        <div class="top-bar">
+            <img src="img/microphone.png" class="app-logo" />
+            <div class="app-title">Meeting Live Translator</div>
+        </div>
+        <div class="main-container">
+            <p id="speech" class="recognition-sentence"></p>
+        </div>
+        <div class="left-settings">
+            <select id="target-language">
+                <option value="en">English</option>
+                <option value="fr">French</option>
+            </select>
+        </div>
+        <div class="right-ankle">
+            <img id="record" class="microphone" src="img/start.png" width="64px" height="64px" onclick="startRecognition()" />
+        </div>
+    </body>
+    <script type = 'text/javascript'>
+        var lastDetect = Date.now();
+        var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 5;
+        var userAction = false;
+
+        function startRecognition () {
+            var img = document.getElementById('record');
+            if (img.src.indexOf('stop') >= 0) {
+                recognition.stop();
+                userAction = true;
+                img.src = 'img/start.png';
+            } else {
+                recognition.start();
+                img.src = 'img/stop.png';
+            }
+        };
+
+        recognition.onstart = function () {
+            var img = document.getElementById('record');
+            img.src = 'img/stop.png';
+        };
+
+        recognition.onstop = function () {
+            var img = document.getElementById('record');
+            img.src = 'img/start.png';
+        };
+
+        recognition.onend = function () {
+            console.log('end');
+            if (!userAction) {
+                recognition.start();
+            }
+        };
+
+        recognition.onerror = function (err) {
+            console.log('error' + err);
+        };
+
+        recognition.onresult = function(event) {
+            var now = Date.now();
+
+            
+            
+            // var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
+            // if (iSecondsFromLastDetect > 3) {
+            //     document.getElementById('speech').textContent = '';
+            // }
+
+            runTranslation('en', 'fr', event.results[0][0].transcript);
+
+            lastDetect = Date.now();
+        };
+
+        function getLastWords(iWords, sTxt) {
+            var aWords = sTxt.split(' ');
+            if (aWords.length > iWords) {
+                var aRestrictedWords = aWords.slice(Math.max(aWords.length - iWords, 1));
+                var sRestricted = '';
+                for (var i = 0, iLen = aRestrictedWords.length; i < iLen; i++) {
+                    sRestricted += aRestrictedWords[i] + ' ';
+                }
+                return sRestricted;
+            } else {
+                return sTxt;
+            }
+        };
+
+        function runTranslation (src, tar, txt) {
+            var iNbOfWords = 20;
+
+            var lastWords = getLastWords(iNbOfWords, txt);
+
+            var baseURL = 'https://translate.googleapis.com/translate_a/single?client=gtx&';
+            var srcLang = 'sl=' + src;
+            var tarLang = 'tl=' + tar;
+            var query = 'q=' + encodeURI(txt);
+            var URL = baseURL + srcLang + '&' + tarLang + '&dt=t&' + query;
+
+            var xmlhttp = new XMLHttpRequest();
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+                   if (xmlhttp.status == 200) {
+                        var r = JSON.parse(xmlhttp.responseText);
+                        var sTranscript = r[0][0][0];
+
+                        var aWords = sTranscript.split(' ');
+
+                        if (aWords.length > 0) {
+                            var iDiv = Math.floor(aWords.length / iNbOfWords);
+                            var iStartIndex = iNbOfWords * iDiv;
+                            var sSentence = '';
+                            for (var i = iStartIndex, iLen = aWords.length; i < iLen; i++) {
+                                sSentence += aWords[i] + ' ';
+                                document.getElementById('speech').textContent = sSentence;
+                            }
+                        }
+                   }
+                }
+            };
+
+            xmlhttp.open('GET', URL, true);
+            xmlhttp.send();
+        } 
+    </script>
+</html>
+

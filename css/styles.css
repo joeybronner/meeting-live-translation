@@ -1,0 +1,149 @@
+@font-face {
+    font-family: 'BebasNeue'; /*a name to be used later*/
+    src: url('../fonts/BebasNeue.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'FourHand'; /*a name to be used later*/
+    src: url('../fonts/FourHand.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'Edo'; /*a name to be used later*/
+    src: url('../fonts/edosz.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'RobotoLight'; /*a name to be used later*/
+    src: url('../fonts/Roboto-Light.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'RobotoThin'; /*a name to be used later*/
+    src: url('../fonts/Roboto-Thin.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'RobotoBold'; /*a name to be used later*/
+    src: url('../fonts/Roboto-Bold.ttf'); /*URL to font*/
+}
+
+body {
+	font-family: Roboto;
+    color: #ddd;
+    background-color: #222;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -100;
+}
+
+.shadow-1 {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: all 0.5s ease-in-out;
+}
+
+.shadow-1:hover {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+.shadow-2 {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.shadow-3 {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+.shadow-4 {
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.shadow-5 {
+  box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+}
+
+.main-container {
+    border: 1px dashed #444;
+    position: fixed;
+    top: calc(10% + 48px);
+    left: 5%;
+    right: 5%;
+    bottom: 30%;
+    text-align: center;
+}
+
+.left-settings {
+    position: fixed;
+    float: left;
+    height: 20%;
+    width: 70%;
+    left: 0;
+    bottom: 0;
+    background-color: #333;
+}
+
+.microphone {
+    cursor: pointer;
+}
+
+.left-settings > select {
+    height: 30px;
+    width: 30%;
+    top: calc(50% - 30px);
+    left: 35%;
+    position: absolute;
+    background-color: #333;
+    color: #ddd;
+}
+
+.right-ankle {
+    position: fixed;
+    float: right;
+    width: 30%;
+    height: 20%;
+    bottom: 0;
+    right: 0;
+    background-color: #555;
+}
+
+.microphone {
+    position: absolute;
+    right: calc(55% - 64px);
+    bottom: calc(70% - 64px);
+}
+
+.recognition-sentence {
+    font-family: RobotoThin;
+    font-size: 4rem;
+}
+
+.top-bar {
+    position: fixed;
+    padding-left: 15px;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 48px;
+    background-color: #333;
+}
+
+.top-bar > .app-logo {
+    height: 32px;
+    width: 32px;
+    margin-top: 8px;
+}
+
+.top-bar > .app-title {
+    position: absolute;
+    top: 11px;
+    font-size: 22px;
+    font-family: RobotoLight;
+    left: 64px;
+}
+
+img {
+    cursor: pointer;
+}
