@@ -14,10 +14,22 @@
             <p id="speech" class="recognition-sentence"></p>
         </div>
         <div class="left-settings">
-            <select id="target-language">
-                <option value="en">English</option>
-                <option value="fr">French</option>
-            </select>
+            <div class="src">
+                <form class="cc-selector">
+                    <input id="src-france" type="radio" name="src-lang" value="French" checked="true" />
+                    <label class="drinkcard-cc france" for="src-france"></label>
+                    <input id="src-us" type="radio" name="src-lang" value="English" />
+                    <label class="drinkcard-cc us" for="src-us"></label>
+                </form>
+            </div>
+            <div class="tar">
+                <form class="cc-selector">
+                    <input id="tar-france" type="radio" name="tar-lang" value="French" />
+                    <label class="drinkcard-cc france" for="tar-france"></label>
+                    <input id="tar-us" type="radio" name="tar-lang" value="English" checked="true" />
+                    <label class="drinkcard-cc us" for="tar-us"></label>
+                </form>
+            </div>
         </div>
         <div class="right-ankle">
             <img id="record" class="microphone" src="img/start.png" width="64px" height="64px" onclick="startRecognition()" />
@@ -31,6 +43,7 @@
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
         var userAction = false;
+        var sSrc, sTar;
 
         function startRecognition () {
             var img = document.getElementById('record');
@@ -39,6 +52,10 @@
                 userAction = true;
                 img.src = 'img/start.png';
             } else {
+                sSrc = getCheckedRadioValue('src-lang') === 'English' ? 'en-US' : 'fr-FR';
+                sTar = getCheckedRadioValue('tar-lang') === 'English' ? 'en-US' : 'fr-FR';
+
+                recognition.lang = sSrc;
                 recognition.start();
                 img.src = 'img/stop.png';
             }
@@ -52,12 +69,15 @@
         recognition.onstop = function () {
             var img = document.getElementById('record');
             img.src = 'img/start.png';
+            document.getElementById('speech').textContent = '';
         };
 
         recognition.onend = function () {
             console.log('end');
             if (!userAction) {
                 recognition.start();
+            } else {
+                document.getElementById('speech').textContent = '';
             }
         };
 
@@ -67,15 +87,11 @@
 
         recognition.onresult = function(event) {
             var now = Date.now();
-
-            
-            
-            // var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
-            // if (iSecondsFromLastDetect > 3) {
-            //     document.getElementById('speech').textContent = '';
-            // }
-
-            runTranslation('en', 'fr', event.results[0][0].transcript);
+            var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
+            if (iSecondsFromLastDetect > 3) {
+                document.getElementById('speech').textContent = '';
+            }
+            runTranslation(sSrc.substring(0, 2), sTar.substring(0, 2), event.results[0][0].transcript);
 
             lastDetect = Date.now();
         };
@@ -92,6 +108,15 @@
             } else {
                 return sTxt;
             }
+        };
+
+        function getCheckedRadioValue(radioGroupName) {
+           var rads = document.getElementsByName(radioGroupName),
+               i;
+           for (i=0; i < rads.length; i++)
+              if (rads[i].checked)
+                  return rads[i].value;
+           return null; // or undefined, or your preferred default for none checked
         };
 
         function runTranslation (src, tar, txt) {
@@ -128,8 +153,12 @@
                 }
             };
 
-            xmlhttp.open('GET', URL, true);
-            xmlhttp.send();
+            if (sSrc !== sTar) {
+                xmlhttp.open('GET', URL, true);
+                xmlhttp.send();
+            } else {
+                document.getElementById('speech').textContent = query;
+            }
         } 
     </script>
 </html>
