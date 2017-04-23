@@ -36,6 +36,7 @@
         </div>
     </body>
     <script type = 'text/javascript'>
+
         var lastDetect = Date.now();
         var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
         recognition.lang = 'en-US';
@@ -43,7 +44,25 @@
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
         var userAction = false;
-        var sSrc, sTar;
+        var sSrc = 'fr-FR';
+        var sTar = 'en-EN';
+
+        if (annyang) {
+
+            annyang.addCallback('result', function(phrases) {
+              console.log("I think the user said: ", phrases[0]);
+              console.log("But then again, it could be any of the following: ", phrases);
+            });
+
+            annyang.addCallback('start', function () {
+                console.log('started!');
+            });
+
+            annyang.setLanguage(sSrc);
+
+            // Start listening.
+            annyang.start();
+        }
 
         function startRecognition () {
             var img = document.getElementById('record');
@@ -85,16 +104,19 @@
             console.log('error' + err);
         };
 
-        recognition.onresult = function(event) {
-            var now = Date.now();
-            var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
-            if (iSecondsFromLastDetect > 3) {
-                document.getElementById('speech').textContent = '';
+        var _onresult = function(event) {
+            if (event) {
+                var now = Date.now();
+                var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
+                if (iSecondsFromLastDetect > 3) {
+                    document.getElementById('speech').textContent = '';
+                }
+                runTranslation(sSrc.substring(0, 2), sTar.substring(0, 2), event.results[0][0].transcript);
+                lastDetect = Date.now();
             }
-            runTranslation(sSrc.substring(0, 2), sTar.substring(0, 2), event.results[0][0].transcript);
-
-            lastDetect = Date.now();
         };
+
+        recognition.onresult = _onresult(event);
 
         function getLastWords(iWords, sTxt) {
             var aWords = sTxt.split(' ');
