@@ -37,88 +37,117 @@
     </body>
     <script type = 'text/javascript'>
 
+        var eSpeechContent = document.getElementById('speech');
+        var eImgStartStop = document.getElementById('record');
+
         var lastDetect = Date.now();
         var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
         recognition.lang = 'en-US';
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
+        var iNbOfWords = 20;
         var userAction = false;
         var sSrc = 'fr-FR';
         var sTar = 'en-EN';
 
-        if (annyang) {
-
-            annyang.addCallback('result', function(phrases) {
-              console.log("I think the user said: ", phrases[0]);
-              console.log("But then again, it could be any of the following: ", phrases);
-            });
-
-            annyang.addCallback('start', function () {
-                console.log('started!');
-            });
-
-            annyang.setLanguage(sSrc);
-
-            // Start listening.
-            annyang.start();
-        }
-
         function startRecognition () {
-            var img = document.getElementById('record');
-            if (img.src.indexOf('stop') >= 0) {
+            if (eImgStartStop.src.indexOf('stop') >= 0) {
                 recognition.stop();
                 userAction = true;
-                img.src = 'img/start.png';
-            } else {
+                eImgStartStop.src = 'img/start.png';
+            }
+            else {
                 sSrc = getCheckedRadioValue('src-lang') === 'English' ? 'en-US' : 'fr-FR';
                 sTar = getCheckedRadioValue('tar-lang') === 'English' ? 'en-US' : 'fr-FR';
+                
+                // Using Annyang
+                if (annyang) {
+                    annyang.addCallback('result', _onResult);
 
-                recognition.lang = sSrc;
-                recognition.start();
-                img.src = 'img/stop.png';
+                    annyang.addCallback('start', _onStart);
+                    annyang.addCallback('stop', _onStop);
+
+                    annyang.setLanguage(sSrc);
+
+                    annyang.start();
+                }
+                // Using HTML5 API from scratch
+                else {
+                    recognition.lang = sSrc;
+                    recognition.start();
+                }
+                eImgStartStop.src = 'img/stop.png';
             }
         };
 
-        recognition.onstart = function () {
-            var img = document.getElementById('record');
-            img.src = 'img/stop.png';
-        };
+        recognition.onstart = _onStart;
 
-        recognition.onstop = function () {
-            var img = document.getElementById('record');
-            img.src = 'img/start.png';
-            document.getElementById('speech').textContent = '';
-        };
+        recognition.onstop = _onStop;
+
+        recognition.onerror = _onError;
 
         recognition.onend = function () {
             console.log('end');
             if (!userAction) {
                 recognition.start();
             } else {
+                eSpeechContent.textContent = '';
+            }
+        };
+
+        recognition.onresult = _onResult;
+
+        /*
+         * --------------------------------------------------------------------
+         * Recognition tool methods
+         * --------------------------------------------------------------------
+         */
+
+         var _onStart = function () {
+            console.log('started');
+            eImgStartStop.src = 'img/stop.png';
+         };
+
+         var _onStop = function () {
+            console.log('stoped');
+            eImgStartStop.src = 'img/start.png';
+            eSpeechContent.textContent = '';
+         };
+
+         var _onError = function (err) {
+            console.log('error: ' + err);
+         }
+
+         var _onResult = function (o) {
+            var sTranscript = annyang ? oEvent[0] : oEvent.results[0][0].transcript;
+            var now = Date.now();
+            var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
+            if (iSecondsFromLastDetect > 3) {
                 document.getElementById('speech').textContent = '';
             }
-        };
+            var sTranslatedText = runTranslation(sSrc.substring(0, 2), sTar.substring(0, 2), sTranscript);
+            var aWords = sTranslatedText.split(' ');
 
-        recognition.onerror = function (err) {
-            console.log('error' + err);
-        };
-
-        var _onresult = function(event) {
-            if (event) {
-                var now = Date.now();
-                var iSecondsFromLastDetect = Math.ceil(((now - lastDetect) / 1000));
-                if (iSecondsFromLastDetect > 3) {
-                    document.getElementById('speech').textContent = '';
+            if (aWords.length > 0) {
+                var iDiv = Math.floor(aWords.length / iNbOfWords);
+                var iStartIndex = iNbOfWords * iDiv;
+                var sSentence = '';
+                for (var i = iStartIndex, iLen = aWords.length; i < iLen; i++) {
+                    sSentence += aWords[i] + ' ';
+                    eSpeechContent.textContent = sSentence;
                 }
-                runTranslation(sSrc.substring(0, 2), sTar.substring(0, 2), event.results[0][0].transcript);
-                lastDetect = Date.now();
             }
-        };
+            lastDetect = Date.now();
+         };
 
-        recognition.onresult = _onresult(event);
+        /*
+         * --------------------------------------------------------------------
+         * Utils
+         * --------------------------------------------------------------------
+         */
 
-        function getLastWords(iWords, sTxt) {
+        function getLastWords (iWords, sTxt) {
             var aWords = sTxt.split(' ');
             if (aWords.length > iWords) {
                 var aRestrictedWords = aWords.slice(Math.max(aWords.length - iWords, 1));
@@ -132,17 +161,17 @@
             }
         };
 
-        function getCheckedRadioValue(radioGroupName) {
-           var rads = document.getElementsByName(radioGroupName),
-               i;
-           for (i=0; i < rads.length; i++)
-              if (rads[i].checked)
-                  return rads[i].value;
+        function getCheckedRadioValue (radioGroupName) {
+            var rads = document.getElementsByName(radioGroupName);
+            for (var i = 0, iLen = rads.length; i < iLen; i++) {
+                if (rads[i].checked) {
+                    return rads[i].value;
+                }
+           }
            return null; // or undefined, or your preferred default for none checked
         };
 
         function runTranslation (src, tar, txt) {
-            var iNbOfWords = 20;
 
             var lastWords = getLastWords(iNbOfWords, txt);
 
@@ -159,18 +188,7 @@
                    if (xmlhttp.status == 200) {
                         var r = JSON.parse(xmlhttp.responseText);
                         var sTranscript = r[0][0][0];
-
-                        var aWords = sTranscript.split(' ');
-
-                        if (aWords.length > 0) {
-                            var iDiv = Math.floor(aWords.length / iNbOfWords);
-                            var iStartIndex = iNbOfWords * iDiv;
-                            var sSentence = '';
-                            for (var i = iStartIndex, iLen = aWords.length; i < iLen; i++) {
-                                sSentence += aWords[i] + ' ';
-                                document.getElementById('speech').textContent = sSentence;
-                            }
-                        }
+                        return sTranscript;
                    }
                 }
             };
@@ -179,9 +197,8 @@
                 xmlhttp.open('GET', URL, true);
                 xmlhttp.send();
             } else {
-                document.getElementById('speech').textContent = query;
+                return txt;
             }
         } 
     </script>
 </html>
-
